@@ -2,6 +2,7 @@ import colorsys
 from .palette import palettes
 import numpy as np
 import random
+from PIL import Image
 
 
 def random_colors(N, bright=True, scale=True, shuffle=False):

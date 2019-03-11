@@ -11,8 +11,7 @@ def separate_folder(target_dir, new_target_dir, folder_name, remove_remained=Fal
     :parames folder_name: 元画像やラベル画像を入れるフォルダ名(images, labels, palettesなど)
     """
     if not os.path.exists(new_target_dir):
-        raise Exception('No such directory')
-
+        os.makedirs(new_target_dir)
     image_files = glob(target_dir + '/*.png')
     for image_file in image_files:
         file_name = image_file.split('/')[-1]

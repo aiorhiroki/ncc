@@ -11,9 +11,8 @@ def list_classification_files(data_dir):
     """
     image_files = list()
     labels = list()
-    class_names = os.listdir(data_dir)
-    for class_id, class_name in enumerate(class_names):
-        class_dir = os.path.join(data_dir, class_name)
+    class_dirs = glob(data_dir + '/*')
+    for class_id, class_dir in enumerate(class_dirs):
         for image_ex in ['*.jpg', '*.png']:
             class_files = glob(os.path.join(class_dir, image_ex))
             image_files += class_files

@@ -5,7 +5,7 @@ NCC-AIエンジニア自作パッケージ
 First, clone ncc using git:
 
 ```
-git clone https://github.com/NCC-AI/ncc.git
+git clone https://github.com/aiorhiroki/ncc.git
 ```
 Then, cd to the ncc folder and run the install command:
 ```

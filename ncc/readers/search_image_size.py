@@ -37,9 +37,9 @@ def median_size_from_files(files):
             height_list.append(height)
             width_list.append(width)
             channel_list.append(channel)
-    height_median = np.median(height_list).astype('int')
-    width_median = np.median(width_list).astype('int')
+    height_median = int(np.median(height_list))
+    width_median = int(np.median(width_list))
     counter = Counter(channel_list)
-    channel_most = counter.most_common(1)[0][0]
+    channel_most = int(counter.most_common(1)[0][0])
 
     return height_median, width_median, channel_most

@@ -58,7 +58,10 @@ def classification_set(target_dir, train_dirs, test_dirs):
 
     data_dirs = os.listdir(target_dir)
     for data_dir in data_dirs:
-        annotation_list, class_name_list = list_classification_files(os.path.join(target_dir, data_dir))
+        data_dir_path = os.path.join(target_dir, data_dir)
+        if not os.path.isdir(data_dir_path):  # not a directory
+            continue
+        annotation_list, class_name_list = list_classification_files(data_dir_path)
         if data_dir in train_dirs:
             train_set += annotation_list
         elif data_dir in test_dirs:

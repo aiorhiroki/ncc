@@ -11,8 +11,10 @@ def list_classification_files(data_dir):
     """
     image_files = list()
     labels = list()
-    class_dirs = glob(data_dir + '/*')
-    for class_id, class_dir in enumerate(class_dirs):
+    data_dir_list = os.listdir(data_dir)
+    class_names = [class_name for class_name in data_dir_list if os.path.isdir(os.path.join(data_dir, class_name))]
+    for class_id, class_name in enumerate(class_names):
+        class_dir = os.path.join(data_dir, class_name)
         for image_ex in ['*.jpg', '*.png']:
             class_files = glob(os.path.join(class_dir, image_ex))
             image_files += class_files
@@ -20,7 +22,7 @@ def list_classification_files(data_dir):
 
     annotation_set = [[image_file, label] for image_file, label in zip(image_files, labels)]
 
-    return annotation_set
+    return annotation_set, class_names
 
 
 def list_segmentation_files(data_dir, image_dir, label_dir):
@@ -52,16 +54,18 @@ def classification_set(target_dir, train_dirs, test_dirs):
     :return: train_set: [image_file_path, label_idx]
              test_set: [image_file_path, label_idx]
     """
-    train_set, test_set = list(), list()
+    train_set, test_set, class_names = list(), list(), list()
 
     data_dirs = os.listdir(target_dir)
     for data_dir in data_dirs:
+        annotation_list, class_name_list = list_classification_files(os.path.join(target_dir, data_dir))
         if data_dir in train_dirs:
-            train_set += list_classification_files(os.path.join(target_dir, data_dir))
+            train_set += annotation_list
         elif data_dir in test_dirs:
-            test_set += list_classification_files(os.path.join(target_dir, data_dir))
-
-    return train_set, test_set
+            test_set += annotation_list
+        class_names += class_name_list
+    class_names = set(class_names)
+    return train_set, test_set, class_names
 
 
 def segmentation_set(target_dir, train_dirs, test_dirs, image_dir='images', label_dir='labels'):

@@ -97,11 +97,11 @@ def segmentation_set(target_dir, train_dirs, test_dirs, image_dir='images', labe
     data_dirs = os.listdir(target_dir)
     for data_dir in data_dirs:
         if data_dir in train_dirs:
-            train_set += list_segmentation_files(os.path.join(
-                target_dir, data_dir), image_dir, label_dir)
+            train_set += list_segmentation_files(
+                os.path.join(target_dir, data_dir), image_dir, label_dir)
         elif data_dir in test_dirs:
-            test_set += list_segmentation_files(os.path.join(
-                target_dir, data_dir), image_dir, label_dir)
+            test_set += list_segmentation_files(
+                os.path.join(target_dir, data_dir), image_dir, label_dir)
 
     return train_set, test_set
 

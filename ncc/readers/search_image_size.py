@@ -24,22 +24,35 @@ def search_from_annotation(annotation_file):
     return median_size_from_files(files), class_names
 
 
-def median_size_from_files(files):
+def search_image_profile(files, segmentation=False):
     if len(files) > 10000:
         files = files[:10000]  # ignore large image files
 
     height_list, width_list, channel_list = [], [], []
+    if segmentation:
+        color_list = list()
     for file in files:
-        if re.search('.jpg|jpeg|bmp|png|JPG|JPEG|BMP|PNG|', file):
-            image = Image.open(file)
-            width, height = image.size[:2]
-            channel = 1 if len(np.array(image).shape) == 2 else 3
-            height_list.append(height)
-            width_list.append(width)
-            channel_list.append(channel)
+        image = Image.open(file)
+        width, height = image.size[:2]
+        channel = 1 if len(np.array(image).shape) == 2 else 3
+        height_list.append(height)
+        width_list.append(width)
+        channel_list.append(channel)
+        if segmentation:
+            colors = image.getcolors()
+            # color is None if using over 255 colors
+            if colors is None:
+                continue
+            for count, color in colors:
+                if color not in color_list:
+                    print(color)
+                    color_list.append(color)
+
     height_median = int(np.median(height_list))
     width_median = int(np.median(width_list))
     counter = Counter(channel_list)
     channel_most = int(counter.most_common(1)[0][0])
+    if segmentation:
+        return height_median, width_median, channel_most, sorted(color_list)
 
     return height_median, width_median, channel_most

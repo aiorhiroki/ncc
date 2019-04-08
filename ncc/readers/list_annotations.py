@@ -27,7 +27,7 @@ def list_classification_files(data_dir):
     return annotation_set, class_names
 
 
-def list_segmentation_files(data_dir, image_dir, label_dir):
+def list_segmentation_files(data_dir_path, image_dir, label_dir):
     """
     list raw image file path and mask file path
     :param data_dir: data_dir/(images or labels)/image_file
@@ -36,14 +36,15 @@ def list_segmentation_files(data_dir, image_dir, label_dir):
     :return: [image_file_path, label_file_path]
     """
     label_files = list()
-    for image_ex in ['png', 'jpg']:
-        label_path_format = '{}/{}/*.{}'.format(data_dir, label_dir, image_ex)
-        label_files += glob(label_path_format)
+    image_dir_path = os.path.join(data_dir_path, image_dir)
+    label_dir_path = os.path.join(data_dir_path, label_dir)
+    for image_ex in ['*.jpg', '*.png']:
+        label_files += glob(os.path.join(label_dir_path, image_ex))
 
-    image_dir_path = '/%s/' % image_dir
-    label_dir_path = '/%s/' % label_dir
-    annotation_set = [[label_file.replace(
-        label_dir_path, image_dir_path), label_file] for label_file in label_files]
+    annotation_set = [[
+        os.path.join(image_dir_path, os.path.basename(label_file)), 
+        label_file
+        ] for label_file in label_files]
 
     return annotation_set
 
@@ -92,16 +93,17 @@ def segmentation_set(target_dir, train_dirs, test_dirs, image_dir='images', labe
     :return: train_set: [image_file_path, label_file_path]
              test_set: [image_file_path, label_file_path]
     """
-    train_set, test_set = list(), list()
+    train_set, test_set, class_names = list(), list(), list()
 
     data_dirs = os.listdir(target_dir)
     for data_dir in data_dirs:
+        data_dir_path = os.path.join(target_dir, data_dir)
+        annotation_list = list_segmentation_files(
+                data_dir_path, image_dir, label_dir)
         if data_dir in train_dirs:
-            train_set += list_segmentation_files(
-                os.path.join(target_dir, data_dir), image_dir, label_dir)
+            train_set += annotation_list
         elif data_dir in test_dirs:
-            test_set += list_segmentation_files(
-                os.path.join(target_dir, data_dir), image_dir, label_dir)
+            test_set += annotation_list
 
     return train_set, test_set
 

@@ -29,8 +29,7 @@ def search_image_profile(files, segmentation=False):
         files = files[:10000]  # ignore large image files
 
     height_list, width_list, channel_list = [], [], []
-    if segmentation:
-        color_list = list()
+    color_list = list()
     for file in files:
         image = Image.open(file)
         width, height = image.size[:2]
@@ -52,7 +51,5 @@ def search_image_profile(files, segmentation=False):
     width_median = int(np.median(width_list))
     counter = Counter(channel_list)
     channel_most = int(counter.most_common(1)[0][0])
-    if segmentation:
-        return height_median, width_median, channel_most, sorted(color_list)
 
-    return height_median, width_median, channel_most
+    return height_median, width_median, channel_most, sorted(color_list)

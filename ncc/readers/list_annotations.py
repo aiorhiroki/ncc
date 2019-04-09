@@ -49,7 +49,7 @@ def list_segmentation_files(data_dir_path, image_dir, label_dir):
         label_no_ex_path, ex = os.path.splitext(label_file_name)
         image_no_ex_path = os.path.join(image_dir_path, label_no_ex_path)
         for image_ex in IMAGE_EXTENTINS:
-            image_path = os.path.join(image_no_ex_path, image_ex)
+            image_path = image_no_ex_path + image_ex
             if image_path:
                 annotation_set.append([image_path, label_path])
 

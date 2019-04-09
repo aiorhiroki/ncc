@@ -35,3 +35,13 @@ def convert_to_palette(numpy_image):
     pil_palette = Image.fromarray(np.uint8(numpy_image), mode="P")
     pil_palette.putpalette(palettes)
     return pil_palette
+
+
+def change_color_palettes(image_files, colors):
+    for image_file in image_files:
+        pil_img = Image.open(image_file)
+        numpy_image = np.array(pil_img, dtype=np.uint8)
+        for i, color in enumerate(colors):
+            numpy_image[numpy_image == color] = i
+        pil_palette = convert_to_palette(numpy_image)
+        pil_palette.save(image_file)

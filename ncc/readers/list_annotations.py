@@ -35,16 +35,23 @@ def list_segmentation_files(data_dir_path, image_dir, label_dir):
     :param label_dir
     :return: [image_file_path, label_file_path]
     """
+    IMAGE_EXTENTINS = ['.jpg', '.png']
     label_files = list()
     image_dir_path = os.path.join(data_dir_path, image_dir)
     label_dir_path = os.path.join(data_dir_path, label_dir)
-    for image_ex in ['*.jpg', '*.png']:
-        label_files += glob(os.path.join(label_dir_path, image_ex))
-
-    annotation_set = [[
-        os.path.join(image_dir_path, os.path.basename(label_file)), 
-        label_file
-        ] for label_file in label_files]
+    for image_ex in IMAGE_EXTENTINS:
+        image_path = "*" + image_ex
+        label_files += glob(os.path.join(label_dir_path, image_path))
+    
+    annotation_set = list()
+    for label_path in label_files:
+        label_file_name = os.path.basename(label_path)
+        label_no_ex_path, ex = os.path.splitext(label_file_name)
+        image_no_ex_path = os.path.join(image_dir_path, label_no_ex_path)
+        for image_ex in IMAGE_EXTENTINS:
+            image_path = os.path.join(image_no_ex_path, image_ex)
+            if image_path:
+                annotation_set.append([image_path, label_path])
 
     return annotation_set
 

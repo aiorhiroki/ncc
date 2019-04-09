@@ -29,7 +29,6 @@ def search_image_profile(files, segmentation=False):
         files = files[:10000]  # ignore large image files
 
     height_list, width_list, channel_list = [], [], []
-    color_list = list()
     for file in files:
         image = Image.open(file)
         width, height = image.size[:2]
@@ -37,19 +36,26 @@ def search_image_profile(files, segmentation=False):
         height_list.append(height)
         width_list.append(width)
         channel_list.append(channel)
-        if segmentation:
-            colors = image.getcolors()
-            # color is None if using over 255 colors
-            if colors is None:
-                continue
-            for count, color in colors:
-                if color not in color_list:
-                    print(color)
-                    color_list.append(color)
 
     height_median = int(np.median(height_list))
     width_median = int(np.median(width_list))
     counter = Counter(channel_list)
     channel_most = int(counter.most_common(1)[0][0])
 
-    return height_median, width_median, channel_most, sorted(color_list)
+    return height_median, width_median, channel_most
+
+
+def search_image_colors(files, segmentation=False):
+    if len(files) > 10000:
+        files = files[:10000]  # ignore large image files
+    color_list = list()
+    for file in files:
+        image = Image.open(file)
+        colors = image.getcolors()
+        # color is None if using over 255 colors
+        if colors is None:
+            continue
+        for count, color in colors:
+            if color not in color_list:
+                color_list.append(color)
+    return sorted(color_list)

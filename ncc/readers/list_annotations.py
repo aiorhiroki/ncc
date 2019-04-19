@@ -42,7 +42,7 @@ def list_segmentation_files(data_dir_path, image_dir, label_dir):
     for image_ex in IMAGE_EXTENTINS:
         image_path = "*" + image_ex
         label_files += glob(os.path.join(label_dir_path, image_path))
-    
+
     annotation_set = list()
     for label_path in label_files:
         label_file_name = os.path.basename(label_path)
@@ -56,18 +56,17 @@ def list_segmentation_files(data_dir_path, image_dir, label_dir):
     return annotation_set
 
 
-def classification_set(target_dir, train_dirs, test_dirs):
+def classification_set(target_dir, input_dirs,
+                       training=True, class_names=list()):
     """
     collect annotation files in target directory
     (target_dir/data_dir/class_dir/image_file)
     :param target_dir: root path that contains data set
-    :param train_dirs: directory list used for train data
-    :param test_dirs: directory list used for test data
+    :param input_dirs: directory list used for train data
     :return: train_set: [image_file_path, label_idx]
              test_set: [image_file_path, label_idx]
     """
-    train_set, test_set, class_names = list(), list(), list()
-
+    data_set = list()
     data_dirs = os.listdir(target_dir)
     for data_dir in data_dirs:
         data_dir_path = os.path.join(target_dir, data_dir)
@@ -75,61 +74,51 @@ def classification_set(target_dir, train_dirs, test_dirs):
             continue
         annotation_list, class_name_list = list_classification_files(
             data_dir_path)
-        if data_dir in train_dirs:
-            train_set += annotation_list
-        elif data_dir in test_dirs:
-            test_set += annotation_list
-        class_names += class_name_list
+        if data_dir in input_dirs:
+            data_set += annotation_list
+        if training:
+            class_names += class_name_list
 
     # set class name and get class id.
-    class_names = list(set(class_names))
-    train_set = [[path, class_names.index(name)] for path, name in train_set]
-    test_set = [[path, class_names.index(name)] for path, name in test_set]
+    if training:
+        class_names = list(set(class_names))
+    data_set = [[path, class_names.index(name)] for path, name in data_set]
 
-    return train_set, test_set, class_names
+    return data_set, class_names
 
 
-def segmentation_set(target_dir, train_dirs, test_dirs, image_dir='images', label_dir='labels'):
+def segmentation_set(target_dir, input_dirs, image_dir, label_dir):
     """
-    collect annotation files in target dir (target_dir/data_dir/class_dir/image_file)
+    collect annotation files in target dir (target/data/class/image_file)
     :param target_dir: root path that contains data set
-    :param train_dirs: directory list used for train data
-    :param test_dirs: directory list used for test data
+    :param input_dirs: directory list used for train/validation/test data
     :param image_dir: raw image directory name
     :param label_dir: mask image directory name
     :return: train_set: [image_file_path, label_file_path]
              test_set: [image_file_path, label_file_path]
     """
-    train_set, test_set, class_names = list(), list(), list()
-
+    data_set = list()
     data_dirs = os.listdir(target_dir)
     for data_dir in data_dirs:
         data_dir_path = os.path.join(target_dir, data_dir)
         annotation_list = list_segmentation_files(
-                data_dir_path, image_dir, label_dir)
-        if data_dir in train_dirs:
-            train_set += annotation_list
-        elif data_dir in test_dirs:
-            test_set += annotation_list
+            data_dir_path, image_dir, label_dir)
+        if data_dir in input_dirs:
+            data_set += annotation_list
 
-    return train_set, test_set
+    return data_set
 
 
-def data_set_from_annotation(train_annotation, test_annotation):
+def data_set_from_annotation(annotation_file):
     """
-    collect annotation files in target dir (target_dir/data_dir/class_dir/image_file)
-    :param train_annotation: train_annotation_csv_file
-    :param test_annotation: test_annotation_csv_file
+    collect annotation files in target dir (target/data/class/image_file)
+    :param annotation_file: annotation_csv_file
     :return: train_set: [image_file_path, label_idx]
              test_set: [image_file_path, label_idx]
     """
-    train_set, test_set = list(), list()
-    with open(train_annotation, 'r') as csv_file:
+    data_set = list()
+    with open(annotation_file, 'r') as csv_file:
         reader = csv.reader(csv_file)
         for row in reader:
-            train_set.append(row)
-    with open(test_annotation, 'r') as csv_file:
-        reader = csv.reader(csv_file)
-        for row in reader:
-            test_set.append(row)
-    return train_set, test_set
+            data_set.append(row)
+    return data_set

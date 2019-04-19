@@ -1,1 +1,1 @@
-from .callbacks import slack_logging
+from .callbacks import slack_logging, MultiGPUCheckpointCallback

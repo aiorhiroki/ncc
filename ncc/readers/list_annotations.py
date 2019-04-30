@@ -2,6 +2,8 @@ import os
 from glob import glob
 import csv
 
+from ncc.readers.search_xml_profile import get_classname, convert_annotation
+
 
 def list_classification_files(data_dir):
     """
@@ -56,6 +58,34 @@ def list_segmentation_files(data_dir_path, image_dir, label_dir):
     return annotation_set
 
 
+def list_detection_files(data_dir_path, image_dir, xml_dir, classes):
+    """
+    One row for one image;
+    Row format: image_file_path box1 box2 ... boxN
+    Box format: x_min,y_min,x_max,y_max,class_id
+    :param data_dir: data_dir/(images or xmls)/image_file
+    :param image_dir
+    :param xml_dir
+    """
+    IMAGE_EXTENTINS = ['.jpg', '.png']
+    image_dir_path = os.path.join(data_dir_path, image_dir)
+    xml_dir_path = os.path.join(data_dir_path, xml_dir)
+    xml_files = glob(os.path.join(xml_dir_path, '*.xml'))
+
+    annotation_set = list()
+    for xml_path in xml_files:
+        xml_annotation = convert_annotation(xml_path, classes)
+        xml_file_name = os.path.basename(xml_path)
+        xml_no_ex_path, ex = os.path.splitext(xml_file_name)
+        image_no_ex_path = os.path.join(image_dir_path, xml_no_ex_path)
+        for image_ex in IMAGE_EXTENTINS:
+            image_path = image_no_ex_path + image_ex
+            if os.path.exists(image_path):
+                annotation_set.append(image_path + xml_annotation)
+
+    return annotation_set
+
+
 def classification_set(target_dir, input_dirs,
                        training=True, class_names=list()):
     """
@@ -76,8 +106,8 @@ def classification_set(target_dir, input_dirs,
             data_dir_path)
         if data_dir in input_dirs:
             data_set += annotation_list
-        if training:
-            class_names += class_name_list
+            if training:
+                class_names += class_name_list
 
     # set class name and get class id.
     if training:
@@ -101,12 +131,48 @@ def segmentation_set(target_dir, input_dirs, image_dir, label_dir):
     data_dirs = os.listdir(target_dir)
     for data_dir in data_dirs:
         data_dir_path = os.path.join(target_dir, data_dir)
+        if not os.path.isdir(data_dir_path):  # not a directory
+            continue
         annotation_list = list_segmentation_files(
             data_dir_path, image_dir, label_dir)
         if data_dir in input_dirs:
             data_set += annotation_list
 
     return data_set
+
+
+def detection_set(target_dir, input_dirs, image_dir, xml_dir,
+                  training=True, class_names=list()):
+    """
+    collect annotation files in target directory
+    (target_dir/data_dir/class_dir/image_file)
+    :param target_dir: root path that contains data set
+    :param input_dirs: directory list used for train data
+    :return: train_set: [image_file_path, label_idx]
+             test_set: [image_file_path, label_idx]
+    """
+    data_set = list()
+    data_dirs = os.listdir(target_dir)
+
+    for data_dir in data_dirs:
+        data_dir_path = os.path.join(target_dir, data_dir)
+        if os.path.isdir(data_dir_path) and data_dir in input_dirs:
+            if training:
+                xml_dir_path = os.path.join(data_dir_path, xml_dir)
+                xml_files = glob(os.path.join(xml_dir_path, '*.xml'))
+                class_names += get_classname(xml_files)
+
+    # set class name and get class id.
+    if training:
+        class_names = list(set(class_names))
+
+    for data_dir in data_dirs:
+        data_dir_path = os.path.join(target_dir, data_dir)
+        if os.path.isdir(data_dir_path) and data_dir in input_dirs:
+            data_set += list_detection_files(
+                data_dir_path, image_dir, xml_dir, class_names)
+
+    return data_set, class_names
 
 
 def data_set_from_annotation(annotation_file):

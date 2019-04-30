@@ -2,16 +2,16 @@ from glob import glob
 from collections import Counter
 import numpy as np
 import pandas as pd
-import re
 from PIL import Image
 
 
 def search_from_dir(target_dir):
     files = []
     for image_suffix in ['jpg', 'png', 'jpeg']:
-        image_paths = target_dir + '/*/*.' + image_suffix  # target_dir/train(test)/class_name/*.jpg
+        # target_dir/train(test)/class_name/*.jpg
+        image_paths = target_dir + '/*/*.' + image_suffix
         files += glob(image_paths)
-    return median_size_from_files(files)
+    return search_image_profile(files)
 
 
 def search_from_annotation(annotation_file):
@@ -21,10 +21,10 @@ def search_from_annotation(annotation_file):
 
     class_names = np.unique(class_index)
 
-    return median_size_from_files(files), class_names
+    return search_image_profile(files), class_names
 
 
-def search_image_profile(files, segmentation=False):
+def search_image_profile(files):
     if len(files) > 10000:
         files = files[:10000]  # ignore large image files
 
@@ -45,7 +45,7 @@ def search_image_profile(files, segmentation=False):
     return height_median, width_median, channel_most
 
 
-def search_image_colors(files, segmentation=False):
+def search_image_colors(files):
     if len(files) > 10000:
         files = files[:10000]  # ignore large image files
     color_list = list()

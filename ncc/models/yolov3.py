@@ -1,5 +1,4 @@
-from functools import wraps
-
+from functools import wraps, reduce
 import numpy as np
 import tensorflow as tf
 from keras import backend as K

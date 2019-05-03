@@ -31,4 +31,4 @@ def convert_annotation(xml_file, classes):
              int(xmlbox.find('xmax').text), int(xmlbox.find('ymax').text))
         annotation += " " + ",".join([str(a)for a in b]) + ',' + str(cls_id)
 
-    return annotation.lstrip(" ")
+    return annotation

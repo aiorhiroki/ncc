@@ -81,7 +81,7 @@ def list_detection_files(data_dir_path, image_dir, xml_dir, classes):
         for image_ex in IMAGE_EXTENTINS:
             image_path = image_no_ex_path + image_ex
             if os.path.exists(image_path):
-                annotation_set.append([image_path, xml_annotation])
+                annotation_set.append(image_path + xml_annotation)
 
     return annotation_set
 

@@ -3,4 +3,4 @@ from .Model2D import Model2D
 from .Unet import Unet
 from .util import inst_layers, summary_and_png
 from .xception import xception
-from .yolov3 import yolov3, tiny_yolov3
+from .yolov3 import *

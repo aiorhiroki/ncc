@@ -116,9 +116,12 @@ class YOLO(object):
             })
 
         print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        static_dir = current_dir.replace('models', 'static')
 
-        font = ImageFont.truetype(font="arial.ttf",
-                                  size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
+        font = ImageFont.truetype(font=os.path.join(
+            static_dir, 'FiraMono-Medium.otf'),
+            size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
         thickness = (image.size[0] + image.size[1]) // 300
 
         for i, c in reversed(list(enumerate(out_classes))):

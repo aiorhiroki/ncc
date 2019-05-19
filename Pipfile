@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 flake8 = "*"
 autopep8 = "*"
+pandas = "*"
 
 [packages]
 pillow = "==6.0.0"

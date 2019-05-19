@@ -29,5 +29,6 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     keywords='tensorflow keras machine deep learning',
-    packages=find_packages()
+    packages=find_packages(),
+    include_package_data=True
 )

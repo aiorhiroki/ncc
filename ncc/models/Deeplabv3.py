@@ -499,6 +499,7 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
 
     x = Conv2D(classes, (1, 1), padding='same', name=last_layer_name)(x)
     x = BilinearUpsampling(output_size=(input_shape[0], input_shape[1]))(x)
+    x = Activation(activation='softmax')(x)
 
     # Ensure that the model takes into account
     # any potential predecessors of `input_tensor`.

@@ -29,7 +29,8 @@ def create_decoding_layer(sequence, filter_count, add_drop_layer=True):
 
 def Unet(input_shape, output_channel_count):
 
-    feature_map_height, feature_map_width = input_shape[0], input_shape[1]  # will be divided by 2(strides)
+    # will be divided by 2(strides)
+    feature_map_height, feature_map_width = input_shape[0], input_shape[1]
     input_height, input_width = (1, 1)  # input_shape may be resize
     min_size = min(input_shape[:2])
     num_layers = 0
@@ -77,15 +78,17 @@ def Unet(input_shape, output_channel_count):
     for layer_id in range(1, num_layers):
         decoder = create_decoding_layer(
             sequence=decoder,
-            filter_count=8 * 2**(num_layers-layer_id-1) if (num_layers-layer_id) <= 3 else 8 * 2**3,
+            filter_count=8 * 2**(num_layers-layer_id -
+                                 1) if (num_layers-layer_id) <= 3 else 8 * 2**3,
             add_drop_layer=True if layer_id <= 3 else False
         )
-        decoder = concatenate([decoder, encoders[num_layers-layer_id-1]], axis=-1)
+        decoder = concatenate(
+            [decoder, encoders[num_layers-layer_id-1]], axis=-1)
 
     final_layers = [
         Activation(activation='relu'),
         Conv2DTranspose(output_channel_count, (2, 2), strides=2),
-        Activation(activation='sigmoid')
+        Activation(activation='softmax')
     ]
 
     segmentation = inst_layers(final_layers, decoder)

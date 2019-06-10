@@ -39,9 +39,9 @@ from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import DepthwiseConv2D
 from tensorflow.keras.layers import ZeroPadding2D
 from tensorflow.keras.layers import AveragePooling2D
-from tensorflow.keras.engine import Layer
-from tensorflow.keras.engine import InputSpec
-from tensorflow.keras.engine.topology import get_source_inputs
+from tensorflow.keras.layers import Layer
+from tensorflow.keras.layers import InputSpec
+from tensorflow.keras.utils import get_source_inputs
 from tensorflow.keras import backend as K
 from tensorflow.keras.applications import imagenet_utils
 from tensorflow.keras.utils import conv_utils

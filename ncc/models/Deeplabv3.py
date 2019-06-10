@@ -43,7 +43,7 @@ from tensorflow.keras.layers import Layer
 from tensorflow.keras.layers import InputSpec
 from tensorflow.keras.utils import get_source_inputs
 from tensorflow.keras import backend as K
-from tensorflow.keras.applications import imagenet_utils
+from tensorflow.python.keras.applications import imagenet_utils
 from tensorflow.keras.utils import conv_utils
 from tensorflow.keras.utils.data_utils import get_file
 

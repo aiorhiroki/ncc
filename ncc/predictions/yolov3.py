@@ -7,11 +7,11 @@ import colorsys
 from timeit import default_timer as timer
 import numpy as np
 import os
-from keras import backend as K
-from keras.models import load_model
-from keras.layers import Input
+from tensorflow.keras import backend as K
+from tensorflow.keras.models import load_model
+from tensorflow.keras.layers import Input
 from PIL import Image, ImageFont, ImageDraw
-from keras.utils import multi_gpu_model
+from tensorflow.keras.utils import multi_gpu_model
 from ..models import yolo_eval, yolo_body, tiny_yolo_body
 
 
@@ -41,7 +41,7 @@ class YOLO(object):
     def generate(self):
         model_path = os.path.expanduser(self.model_path)
         assert model_path.endswith(
-            '.h5'), 'Keras model or weights must be a .h5 file.'
+            '.h5'), 'tensorflow.keras model or weights must be a .h5 file.'
 
         # Load model, or construct model and load weights.
         num_anchors = len(self.anchors)

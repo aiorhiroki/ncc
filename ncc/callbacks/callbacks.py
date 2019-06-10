@@ -3,7 +3,7 @@ import requests
 import numpy as np
 import warnings
 
-from keras.callbacks import LambdaCallback
+from tensorflow.keras.callbacks import LambdaCallback
 
 
 def slack_logging(url):
@@ -35,7 +35,7 @@ class Callback(object):
     # Properties
         params: dict. Training parameters
             (eg. verbosity, batch size, number of epochs...).
-        model: instance of `keras.models.Model`.
+        model: instance of `tensorflow.keras.models.Model`.
             Reference of the model being trained.
 
     The `logs` dictionary that callback methods

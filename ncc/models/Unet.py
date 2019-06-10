@@ -1,9 +1,9 @@
 # coding: utf-8
-from keras.models import Model
-from keras.layers import Input
-from keras.layers.convolutional import Conv2D, ZeroPadding2D, Conv2DTranspose
-from keras.layers.merge import concatenate
-from keras.layers import LeakyReLU, BatchNormalization, Activation, Dropout
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input
+from tensorflow.keras.layers.convolutional import Conv2D, ZeroPadding2D, Conv2DTranspose
+from tensorflow.keras.layers.merge import concatenate
+from tensorflow.keras.layers import LeakyReLU, BatchNormalization, Activation, Dropout
 import tensorflow.keras.backend as K
 
 from .util import inst_layers

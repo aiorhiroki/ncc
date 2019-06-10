@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Deeplabv3+ model for Keras.
+""" Deeplabv3+ model for tensorflow.keras.
 This model is based on TF repo:
 https://github.com/tensorflow/models/tree/master/research/deeplab
 On Pascal VOC, original model gets to 84.56% mIOU
@@ -10,7 +10,7 @@ due to its reliance on `SeparableConvolution` layers, but Theano will add
 this layer soon.
 
 MobileNetv2 backbone is based on this repo:
-https://github.com/JonathanCMitchell/mobilenet_v2_keras
+https://github.com/JonathanCMitchell/mobilenet_v2_tensorflow.keras
 
 # Reference
 - [Encoder-Decoder with Atrous Separable Convolution
@@ -27,30 +27,30 @@ from __future__ import print_function
 
 import numpy as np
 
-from keras.models import Model
-from keras import layers
-from keras.layers import Input
-from keras.layers import Activation
-from keras.layers import Concatenate
-from keras.layers import Add
-from keras.layers import Dropout
-from keras.layers import BatchNormalization
-from keras.layers import Conv2D
-from keras.layers import DepthwiseConv2D
-from keras.layers import ZeroPadding2D
-from keras.layers import AveragePooling2D
-from keras.engine import Layer
-from keras.engine import InputSpec
-from keras.engine.topology import get_source_inputs
-from keras import backend as K
-from keras.applications import imagenet_utils
-from keras.utils import conv_utils
-from keras.utils.data_utils import get_file
+from tensorflow.keras.models import Model
+from tensorflow.keras import layers
+from tensorflow.keras.layers import Input
+from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import Concatenate
+from tensorflow.keras.layers import Add
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import DepthwiseConv2D
+from tensorflow.keras.layers import ZeroPadding2D
+from tensorflow.keras.layers import AveragePooling2D
+from tensorflow.keras.engine import Layer
+from tensorflow.keras.engine import InputSpec
+from tensorflow.keras.engine.topology import get_source_inputs
+from tensorflow.keras import backend as K
+from tensorflow.keras.applications import imagenet_utils
+from tensorflow.keras.utils import conv_utils
+from tensorflow.keras.utils.data_utils import get_file
 
-WEIGHTS_PATH_X = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_xception_tf_dim_ordering_tf_kernels.h5"
-WEIGHTS_PATH_MOBILE = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels.h5"
-WEIGHTS_PATH_X_CS = "https://github.com/rdiazgar/keras-deeplab-v3-plus/releases/download/1.2/deeplabv3_xception_tf_dim_ordering_tf_kernels_cityscapes.h5"
-WEIGHTS_PATH_MOBILE_CS = "https://github.com/rdiazgar/keras-deeplab-v3-plus/releases/download/1.2/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels_cityscapes.h5"
+WEIGHTS_PATH_X = "https://github.com/bonlime/tensorflow.keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_xception_tf_dim_ordering_tf_kernels.h5"
+WEIGHTS_PATH_MOBILE = "https://github.com/bonlime/tensorflow.keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels.h5"
+WEIGHTS_PATH_X_CS = "https://github.com/rdiazgar/tensorflow.keras-deeplab-v3-plus/releases/download/1.2/deeplabv3_xception_tf_dim_ordering_tf_kernels_cityscapes.h5"
+WEIGHTS_PATH_MOBILE_CS = "https://github.com/rdiazgar/tensorflow.keras-deeplab-v3-plus/releases/download/1.2/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels_cityscapes.h5"
 
 
 class BilinearUpsampling(Layer):
@@ -233,7 +233,7 @@ def _make_divisible(v, divisor, min_value=None):
 
 
 def _inverted_res_block(inputs, expansion, stride, alpha, filters, block_id, skip_connection, rate=1):
-    in_channels = inputs._keras_shape[-1]
+    in_channels = inputs._tensorflow.keras_shape[-1]
     pointwise_conv_filters = int(filters * alpha)
     pointwise_filters = _make_divisible(pointwise_conv_filters, 8)
     x = inputs
@@ -284,7 +284,7 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
     # Arguments
         weights: one of 'pascal_voc' (pre-trained on pascal voc)
             or None (random initialization)
-        input_tensor: optional Keras tensor (i.e. output of `layers.Input()`)
+        input_tensor: optional tensorflow.keras tensor (i.e. output of `layers.Input()`)
             to use as image input for the model.
         input_shape: shape of input image. format HxWxC
             PASCAL VOC model was trained on (512,512,3) images
@@ -304,7 +304,7 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
             Used only for mobilenetv2 backbone
 
     # Returns
-        A Keras model instance.
+        A tensorflow.keras model instance.
 
     # Raises
         RuntimeError: If attempting to run this model with a
@@ -329,7 +329,7 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
     if input_tensor is None:
         img_input = Input(shape=input_shape)
     else:
-        if not K.is_keras_tensor(input_tensor):
+        if not K.is_tensorflow.keras_tensor(input_tensor):
             img_input = Input(tensor=input_tensor, shape=input_shape)
         else:
             img_input = input_tensor

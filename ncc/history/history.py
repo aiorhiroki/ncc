@@ -1,4 +1,4 @@
-"""Keras, History functions.
+"""tensorflow.keras, History functions.
 """
 
 import numpy as np

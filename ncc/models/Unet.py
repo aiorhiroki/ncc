@@ -1,7 +1,7 @@
 # coding: utf-8
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input
-from tensorflow.keras.layers.convolutional import Conv2D, ZeroPadding2D, Conv2DTranspose
+from tensorflow.keras.layers import Conv2D, ZeroPadding2D, Conv2DTranspose
 from tensorflow.keras.layers.merge import concatenate
 from tensorflow.keras.layers import LeakyReLU, BatchNormalization, Activation, Dropout
 import tensorflow.keras.backend as K

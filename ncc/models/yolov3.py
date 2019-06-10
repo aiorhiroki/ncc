@@ -4,8 +4,8 @@ import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras.layers import Input, Lambda
 from tensorflow.keras.layers import Conv2D, Add, ZeroPadding2D, UpSampling2D, Concatenate, MaxPooling2D
-from tensorflow.keras.layers.advanced_activations import LeakyReLU
-from tensorflow.keras.layers.normalization import BatchNormalization
+from tensorflow.keras.layers import LeakyReLU
+from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
 

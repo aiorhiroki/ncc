@@ -18,7 +18,7 @@ def list_classification_files(data_dir):
         os.path.join(data_dir, class_name))]
     for class_name in class_names:
         class_dir = os.path.join(data_dir, class_name)
-        for image_ex in ['*.jpg', '*.png']:
+        for image_ex in ['*.jpg', '*.png', '*.JPG']:
             class_files = glob(os.path.join(class_dir, image_ex))
             image_files += class_files
             labels += [class_name for _ in range(len(class_files))]
@@ -37,7 +37,7 @@ def list_segmentation_files(data_dir_path, image_dir, label_dir):
     :param label_dir
     :return: [image_file_path, label_file_path]
     """
-    IMAGE_EXTENTINS = ['.jpg', '.png']
+    IMAGE_EXTENTINS = ['.jpg', '.png', '.JPG']
     label_files = list()
     image_dir_path = os.path.join(data_dir_path, image_dir)
     label_dir_path = os.path.join(data_dir_path, label_dir)
@@ -67,7 +67,7 @@ def list_detection_files(data_dir_path, image_dir, xml_dir, classes):
     :param image_dir
     :param xml_dir
     """
-    IMAGE_EXTENTINS = ['.jpg', '.png']
+    IMAGE_EXTENTINS = ['.jpg', '.png', '.JPG']
     image_dir_path = os.path.join(data_dir_path, image_dir)
     xml_dir_path = os.path.join(data_dir_path, xml_dir)
     xml_files = glob(os.path.join(xml_dir_path, '*.xml'))

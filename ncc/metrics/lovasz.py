@@ -1,5 +1,17 @@
 import tensorflow as tf
 
+def lovasz_grad(gt_sorted):
+    """
+    Computes gradient of the Lovasz extension w.r.t sorted errors
+    See Alg. 1 in paper
+    """
+    gts = tf.reduce_sum(gt_sorted)
+    intersection = gts - tf.cumsum(gt_sorted)
+    union = gts + tf.cumsum(1. - gt_sorted)
+    jaccard = 1. - intersection / union
+    jaccard = tf.concat((jaccard[0:1], jaccard[1:] - jaccard[:-1]), 0)
+    return jaccard
+
 def lovasz_hinge(logits, labels, per_image=True, ignore=None):
     """
     Binary Lovasz hinge loss

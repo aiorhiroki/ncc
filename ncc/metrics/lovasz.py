@@ -43,7 +43,6 @@ def lovasz_hinge_flat(logits, labels):
     loss = tf.cond(tf.equal(tf.shape(logits)[0], 0),
                    lambda: tf.reduce_sum(logits) * 0.,
                    compute_loss,
-                   strict=True,
                    name="loss"
                    )
     return loss

@@ -1,3 +1,5 @@
+import tensorflow as tf
+
 def lovasz_hinge(logits, labels, per_image=True, ignore=None):
     """
     Binary Lovasz hinge loss

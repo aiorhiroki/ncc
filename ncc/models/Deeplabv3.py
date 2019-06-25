@@ -5,6 +5,10 @@ This model is based on TF repo:
 https://github.com/tensorflow/models/tree/master/research/deeplab
 On Pascal VOC, original model gets to 84.56% mIOU
 
+Now this model is only available for the TensorFlow backend,
+due to its reliance on `SeparableConvolution` layers, but Theano will add
+this layer soon.
+
 MobileNetv2 backbone is based on this repo:
 https://github.com/JonathanCMitchell/mobilenet_v2_keras
 
@@ -21,31 +25,86 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
+import numpy as np
 
-from tensorflow.python.keras.models import Model
-from tensorflow.python.keras import layers
-from tensorflow.python.keras.layers import Input
-from tensorflow.python.keras.layers import Lambda
-from tensorflow.python.keras.layers import Activation
-from tensorflow.python.keras.layers import Concatenate
-from tensorflow.python.keras.layers import Add
-from tensorflow.python.keras.layers import Dropout
-from tensorflow.python.keras.layers import BatchNormalization
-from tensorflow.python.keras.layers import Conv2D
-from tensorflow.python.keras.layers import DepthwiseConv2D
-from tensorflow.python.keras.layers import ZeroPadding2D
-from tensorflow.python.keras.layers import GlobalAveragePooling2D
-from tensorflow.python.keras.utils.layer_utils import get_source_inputs
-from tensorflow.python.keras.utils.data_utils import get_file
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.activations import relu
-from tensorflow.python.keras.applications.imagenet_utils import preprocess_input
+from keras.models import Model
+from keras import layers
+from keras.layers import Input
+from keras.layers import Activation
+from keras.layers import Concatenate
+from keras.layers import Add
+from keras.layers import Dropout
+from keras.layers import BatchNormalization
+from keras.layers import Conv2D
+from keras.layers import DepthwiseConv2D
+from keras.layers import ZeroPadding2D
+from keras.layers import AveragePooling2D
+from keras.engine import Layer
+from keras.engine import InputSpec
+from keras.engine.topology import get_source_inputs
+from keras import backend as K
+from keras.applications import imagenet_utils
+from keras.utils import conv_utils
+from keras.utils.data_utils import get_file
 
 WEIGHTS_PATH_X = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_xception_tf_dim_ordering_tf_kernels.h5"
 WEIGHTS_PATH_MOBILE = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels.h5"
-WEIGHTS_PATH_X_CS = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.2/deeplabv3_xception_tf_dim_ordering_tf_kernels_cityscapes.h5"
-WEIGHTS_PATH_MOBILE_CS = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.2/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels_cityscapes.h5"
+WEIGHTS_PATH_X_CS = "https://github.com/rdiazgar/keras-deeplab-v3-plus/releases/download/1.2/deeplabv3_xception_tf_dim_ordering_tf_kernels_cityscapes.h5"
+WEIGHTS_PATH_MOBILE_CS = "https://github.com/rdiazgar/keras-deeplab-v3-plus/releases/download/1.2/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels_cityscapes.h5"
+
+
+class BilinearUpsampling(Layer):
+    """Just a simple bilinear upsampling layer. Works only with TF.
+       Args:
+           upsampling: tuple of 2 numbers > 0. The upsampling ratio for h and w
+           output_size: used instead of upsampling arg if passed!
+    """
+
+    def __init__(self, upsampling=(2, 2), output_size=None, data_format=None, **kwargs):
+
+        super(BilinearUpsampling, self).__init__(**kwargs)
+
+        self.data_format = K.image_data_format()
+        self.input_spec = InputSpec(ndim=4)
+        if output_size:
+            self.output_size = conv_utils.normalize_tuple(
+                output_size, 2, 'output_size')
+            self.upsampling = None
+        else:
+            self.output_size = None
+            self.upsampling = conv_utils.normalize_tuple(
+                upsampling, 2, 'upsampling')
+
+    def compute_output_shape(self, input_shape):
+        if self.upsampling:
+            height = self.upsampling[0] * \
+                input_shape[1] if input_shape[1] is not None else None
+            width = self.upsampling[1] * \
+                input_shape[2] if input_shape[2] is not None else None
+        else:
+            height = self.output_size[0]
+            width = self.output_size[1]
+        return (input_shape[0],
+                height,
+                width,
+                input_shape[3])
+
+    def call(self, inputs):
+        if self.upsampling:
+            return K.tf.image.resize_bilinear(inputs, (inputs.shape[1] * self.upsampling[0],
+                                                       inputs.shape[2] * self.upsampling[1]),
+                                              align_corners=True)
+        else:
+            return K.tf.image.resize_bilinear(inputs, (self.output_size[0],
+                                                       self.output_size[1]),
+                                              align_corners=True)
+
+    def get_config(self):
+        config = {'upsampling': self.upsampling,
+                  'output_size': self.output_size,
+                  'data_format': self.data_format}
+        base_config = super(BilinearUpsampling, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
 
 def SepConv_BN(x, filters, prefix, stride=1, kernel_size=3, rate=1, depth_activation=False, epsilon=1e-3):
@@ -160,7 +219,7 @@ def _xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
 
 
 def relu6(x):
-    return relu(x, max_value=6)
+    return K.relu(x, max_value=6)
 
 
 def _make_divisible(v, divisor, min_value=None):
@@ -174,7 +233,7 @@ def _make_divisible(v, divisor, min_value=None):
 
 
 def _inverted_res_block(inputs, expansion, stride, alpha, filters, block_id, skip_connection, rate=1):
-    in_channels = inputs.shape[-1]  # inputs._keras_shape[-1]
+    in_channels = inputs._keras_shape[-1]
     pointwise_conv_filters = int(filters * alpha)
     pointwise_filters = _make_divisible(pointwise_conv_filters, 8)
     x = inputs
@@ -215,24 +274,23 @@ def _inverted_res_block(inputs, expansion, stride, alpha, filters, block_id, ski
     return x
 
 
-def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3), classes=21, backbone='mobilenetv2',
-              OS=16, alpha=1., activation='softmax'):
+def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3), classes=21, backbone='mobilenetv2', OS=16, alpha=1.):
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained
-    on PASCAL VOC or Cityscapes. This model is available for TensorFlow only.
+    on PASCAL VOC. This model is available for TensorFlow only,
+    and can only be used with inputs following the TensorFlow
+    data format `(width, height, channels)`.
     # Arguments
-        weights: one of 'pascal_voc' (pre-trained on pascal voc),
-            'cityscapes' (pre-trained on cityscape) or None (random initialization)
+        weights: one of 'pascal_voc' (pre-trained on pascal voc)
+            or None (random initialization)
         input_tensor: optional Keras tensor (i.e. output of `layers.Input()`)
             to use as image input for the model.
         input_shape: shape of input image. format HxWxC
-            PASCAL VOC model was trained on (512,512,3) images. None is allowed as shape/width
-        classes: number of desired classes. PASCAL VOC has 21 classes, Cityscapes has 19 classes.
-            If number of classes not aligned with the weights used, last layer is initialized randomly
+            PASCAL VOC model was trained on (512,512,3) images
+        classes: number of desired classes. If classes != 21,
+            last layer is initialized randomly
         backbone: backbone to use. one of {'xception','mobilenetv2'}
-        activation: optional activation to add to the top of the network.
-            One of 'softmax', 'sigmoid' or None
         OS: determines input_shape/feature_extractor_output ratio. One of {8,16}.
             Used only for xception backbone.
         alpha: controls the width of the MobileNetV2 network. This is known as the
@@ -243,7 +301,7 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
                     of filters in each layer.
                 - If `alpha` = 1, default number of filters from the paper
                     are used at each layer.
-            Used only for mobilenetv2 backbone. Pretrained is only available for alpha=1.
+            Used only for mobilenetv2 backbone
 
     # Returns
         A Keras model instance.
@@ -260,6 +318,10 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
                          '`None` (random initialization), `pascal_voc`, or `cityscapes` '
                          '(pre-trained on PASCAL VOC)')
 
+    if K.backend() != 'tensorflow':
+        raise RuntimeError('The Deeplabv3+ model is only available with '
+                           'the TensorFlow backend.')
+
     if not (backbone in {'xception', 'mobilenetv2'}):
         raise ValueError('The `backbone` argument should be either '
                          '`xception`  or `mobilenetv2` ')
@@ -267,7 +329,10 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
     if input_tensor is None:
         img_input = Input(shape=input_shape)
     else:
-        img_input = input_tensor
+        if not K.is_keras_tensor(input_tensor):
+            img_input = Input(tensor=input_tensor, shape=input_shape)
+        else:
+            img_input = input_tensor
 
     if backbone == 'xception':
         if OS == 8:
@@ -370,19 +435,16 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
     # branching for Atrous Spatial Pyramid Pooling
 
     # Image Feature branch
-    shape_before = tf.shape(x)
-    b4 = GlobalAveragePooling2D()(x)
-    # from (b_size, channels)->(b_size, 1, 1, channels)
-    b4 = Lambda(lambda x: K.expand_dims(x, 1))(b4)
-    b4 = Lambda(lambda x: K.expand_dims(x, 1))(b4)
+    #out_shape = int(np.ceil(input_shape[0] / OS))
+    b4 = AveragePooling2D(pool_size=(
+        int(np.ceil(input_shape[0] / OS)), int(np.ceil(input_shape[1] / OS))))(x)
     b4 = Conv2D(256, (1, 1), padding='same',
                 use_bias=False, name='image_pooling')(b4)
     b4 = BatchNormalization(name='image_pooling_BN', epsilon=1e-5)(b4)
     b4 = Activation('relu')(b4)
-    # upsample. have to use compat because of the option align_corners
-    size_before = tf.keras.backend.int_shape(x)
-    b4 = Lambda(lambda x: tf.compat.v1.image.resize(x, size_before[1:3],
-                                                    method='bilinear', align_corners=True))(b4)
+    b4 = BilinearUpsampling(
+        (int(np.ceil(input_shape[0] / OS)), int(np.ceil(input_shape[1] / OS))))(b4)
+
     # simple 1x1
     b0 = Conv2D(256, (1, 1), padding='same', use_bias=False, name='aspp0')(x)
     b0 = BatchNormalization(name='aspp0_BN', epsilon=1e-5)(b0)
@@ -410,16 +472,14 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
     x = BatchNormalization(name='concat_projection_BN', epsilon=1e-5)(x)
     x = Activation('relu')(x)
     x = Dropout(0.1)(x)
+
     # DeepLab v.3+ decoder
 
     if backbone == 'xception':
         # Feature projection
         # x4 (x2) block
-        size_before2 = tf.keras.backend.int_shape(x)
-        x = Lambda(lambda xx: tf.compat.v1.image.resize(xx,
-                                                        size_before2[1:3] * tf.constant(OS // 4),
-                                                        method='bilinear', align_corners=True))(x)
-
+        x = BilinearUpsampling(output_size=(int(np.ceil(input_shape[0] / 4)),
+                                            int(np.ceil(input_shape[1] / 4))))(x)
         dec_skip1 = Conv2D(48, (1, 1), padding='same',
                            use_bias=False, name='feature_projection0')(skip1)
         dec_skip1 = BatchNormalization(
@@ -432,16 +492,14 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
                        depth_activation=True, epsilon=1e-5)
 
     # you can use it with arbitary number of classes
-    if (weights == 'pascal_voc' and classes == 21) or (weights == 'cityscapes' and classes == 19):
+    if classes == 21:
         last_layer_name = 'logits_semantic'
     else:
         last_layer_name = 'custom_logits_semantic'
 
     x = Conv2D(classes, (1, 1), padding='same', name=last_layer_name)(x)
-    size_before3 = tf.keras.backend.int_shape(img_input)
-    x = Lambda(lambda xx: tf.compat.v1.image.resize(xx,
-                                                    size_before3[1:3],
-                                                    method='bilinear', align_corners=True))(x)
+    x = BilinearUpsampling(output_size=(input_shape[0], input_shape[1]))(x)
+    x = Activation(activation='sigmoid')(x)
 
     # Ensure that the model takes into account
     # any potential predecessors of `input_tensor`.
@@ -449,9 +507,6 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
         inputs = get_source_inputs(input_tensor)
     else:
         inputs = img_input
-
-    if activation in {'softmax', 'sigmoid'}:
-        x = tf.keras.layers.Activation(activation)(x)
 
     model = Model(inputs, x, name='deeplabv3plus')
 
@@ -479,6 +534,7 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
         model.load_weights(weights_path, by_name=True)
     return model
 
+
 def preprocess_input(x):
     """Preprocesses a numpy array encoding a batch of images.
     # Arguments
@@ -486,4 +542,4 @@ def preprocess_input(x):
     # Returns
         Input array scaled to [-1.,1.]
     """
-    return preprocess_input(x, mode='tf')
+    return imagenet_utils.preprocess_input(x, mode='tf')

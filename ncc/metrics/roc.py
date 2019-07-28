@@ -16,7 +16,8 @@ def roc(y_test, y_prediction, num_classes, show_plot=True, save_file=None):
         roc_auc[i] = auc(fpr[i], tpr[i])
 
     # Compute micro-average ROC curve and ROC area
-    fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_prediction.ravel())
+    fpr["micro"], tpr["micro"], _ = roc_curve(
+        y_test.ravel(), y_prediction.ravel())
     roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
 
     # Compute macro-average ROC curve and ROC area
@@ -64,3 +65,5 @@ def roc(y_test, y_prediction, num_classes, show_plot=True, save_file=None):
         plt.show()
     if save_file:
         plt.savefig(save_file)
+
+    return fpr, tpr, roc_auc

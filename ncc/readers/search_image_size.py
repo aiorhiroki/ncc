@@ -45,17 +45,18 @@ def search_image_profile(files):
     return height_median, width_median, channel_most
 
 
-def search_image_colors(files):
+def search_image_colors(files, min_count=1):
+    # 画像の色を取得します。min_countで少ない色をフィルターします。
     if len(files) > 10000:
         files = files[:10000]  # ignore large image files
     color_list = list()
-    for file in files:
-        image = Image.open(file)
+    for image_file in files:
+        image = Image.open(image_file)
         colors = image.getcolors()
         # color is None if using over 255 colors
         if colors is None:
             continue
         for count, color in colors:
-            if color not in color_list:
+            if count >= min_count and color not in color_list:
                 color_list.append(color)
     return sorted(color_list)

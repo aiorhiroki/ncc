@@ -1,6 +1,6 @@
 from ncc.models import Model3D
 from ncc.history import save_history
-from tensorflow.keras.datasets import mnist
+from keras.datasets import mnist
 import numpy as np
 
 num_classes = 10

@@ -23,8 +23,8 @@ If you build your own Fully Connected network, `include_top=False`
 ```python
 from ncc.models import Model2D
 
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
+from keras.models import Model
+from keras.layers import Dense, GlobalAveragePooling2D
 
 base_model = Model2D(input_shape=(64, 128, 3), num_classes=10, include_top=False)
 x = base_model.output
@@ -84,8 +84,8 @@ model.fit(...)
 if you want change your model configuration
 ```python
 from ncc.models import Unet
-from tensorflow.keras import optimizers
-from tensorflow.keras import losses
+from keras import optimizers
+from keras import losses
 
 sgd = optimizers.SGD(lr=0.5)
 mse = losses.mean_squared_error

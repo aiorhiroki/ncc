@@ -6,7 +6,7 @@ from ncc.callbacks import slack_logging
 from ncc.validations import confidence_plot, confusion_visualize, pca
 
 
-from tensorflow.keras.datasets import mnist
+from keras.datasets import mnist
 
 import numpy as np
 

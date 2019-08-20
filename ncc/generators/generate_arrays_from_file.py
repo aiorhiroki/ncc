@@ -4,7 +4,7 @@ import re
 
 from ncc.preprocessing import preprocess_input
 
-from tensorflow.keras.preprocessing.image import load_img, img_to_array
+from keras.preprocessing.image import load_img, img_to_array
 
 
 def generate_arrays_from_annotation(annotation_file, batch_size, nb_classes, target_size, dimension=2, nb_frames=32, training=True):

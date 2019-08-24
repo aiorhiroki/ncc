@@ -3,6 +3,7 @@ import requests
 import numpy as np
 import warnings
 from ncc.utils import MatPlotManager
+from ncc.metrics import iou_validation
 
 import keras
 
@@ -31,11 +32,11 @@ def slack_logging(url):
 
 
 class PlotHistory(keras.callbacks.Callback):
-    def __init__(self, learning_dir):
-        self.learning_dir = learning_dir
+    def __init__(self, save_dir):
+        self.save_dir = save_dir
 
     def on_train_begin(self, logs={}):
-        self.plot_manager = MatPlotManager(self.learning_dir)
+        self.plot_manager = MatPlotManager(self.save_dir)
         for metric in self.params['metrics']:
             self.plot_manager.add_figure(
                 title=metric,
@@ -57,6 +58,45 @@ class PlotHistory(keras.callbacks.Callback):
                 ],
                 is_update=True
             )
+
+
+class IouHistory(keras.callbacks.Callback):
+    def __init__(
+        self,
+        save_dir,
+        validation_files,
+        nb_classes,
+        height,
+        width
+    ):
+        self.save_dir = save_dir
+        self.validation_files = validation_files
+        self.nb_classes = nb_classes
+        self.height = height
+        self.width = width
+
+    def on_train_begin(self, logs={}):
+        self.plot_manager = MatPlotManager(self.save_dir)
+        self.plot_manager.add_figure(
+            title="IoU",
+            xy_labels=("epoch", "iou"),
+            labels=self.class_names,
+        )
+
+    def on_epoch_end(self, epoch, logs={}):
+        figure = self.plot_manager.get_figure("IoU")
+
+        iou = iou_validation(
+            self.nb_classes,
+            self.height,
+            self.width,
+            self.validation_files,
+            self.model
+        )
+        figure.add(
+            [iou],
+            is_update=True
+        )
 
 
 class Callback(object):

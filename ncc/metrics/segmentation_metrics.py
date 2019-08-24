@@ -1,7 +1,43 @@
 import numpy as np
 import six
 import itertools
+from tqdm import tqdm
+from ncc.utils import ImageUtil
 import matplotlib.pyplot as plt
+
+
+def iou_validation(nb_classes, height, width, data_set, model):
+    image_util = ImageUtil(nb_classes, (height, width))
+    conf = np.zeros((nb_classes, nb_classes), dtype=np.int32)
+    print('IoU validation...')
+    for image_file, seg_file in tqdm(data_set):
+        # Get a training sample and make a prediction using current model
+        sample = image_util.read_image(image_file, anti_alias=True)
+        target = image_util.read_image(seg_file, normalization=False)
+        predicted = np.asarray(model.predict_on_batch(
+            np.expand_dims(sample, axis=0)))[0]
+
+        # Convert predictions and target from categorical to integer format
+        predicted = np.argmax(predicted, axis=-1).ravel()
+        target = target.ravel()
+        x = predicted + nb_classes * target
+        bincount_2d = np.bincount(
+            x.astype(np.int32), minlength=nb_classes**2)
+        assert bincount_2d.size == nb_classes**2
+        conf += bincount_2d.reshape((nb_classes, nb_classes))
+
+    # Compute the IoU and mean IoU from the confusion matrix
+    true_positive = np.diag(conf)
+    false_positive = np.sum(conf, 0) - true_positive
+    false_negative = np.sum(conf, 1) - true_positive
+
+    # Just in case we get a division by 0, set the value to 0
+    with np.errstate(divide='ignore', invalid='ignore'):
+        iou = true_positive / \
+            (true_positive + false_positive + false_negative)
+    iou[np.isnan(iou)] = 0
+
+    return iou
 
 
 def calc_semantic_segmentation_confusion(pred_labels, gt_labels):

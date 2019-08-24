@@ -2,13 +2,14 @@ import json
 import requests
 import numpy as np
 import warnings
+from ncc.utils import MatPlotManager
 
-from keras.callbacks import LambdaCallback
+import keras
 
 
 def slack_logging(url):
 
-    slack_logging_callback = LambdaCallback(
+    slack_logging_callback = keras.callbacks.LambdaCallback(
         on_epoch_end=lambda epoch, logs: requests.post(
             url=url,
             data=json.dumps(
@@ -27,6 +28,35 @@ def slack_logging(url):
         )
     )
     return slack_logging_callback
+
+
+class PlotHistory(keras.callbacks.Callback):
+    def __init__(self, learning_dir):
+        self.learning_dir = learning_dir
+
+    def on_train_begin(self, logs={}):
+        self.plot_manager = MatPlotManager(self.learning_dir)
+        for metric in self.params['metrics']:
+            self.plot_manager.add_figure(
+                title=metric,
+                xy_labels=("epoch", metric),
+                labels=[
+                    "train",
+                    "validation"
+                ]
+            )
+
+    def on_epoch_end(self, epoch, logs={}):
+        # update learning figure
+        for metric in self.params['metrics']:
+            figure = self.plot_manager.get_figure(metric)
+            figure.add(
+                [
+                    logs.get(metric),
+                    logs.get('val_{}'.format(metric))
+                ],
+                is_update=True
+            )
 
 
 class Callback(object):

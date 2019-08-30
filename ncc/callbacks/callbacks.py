@@ -1,43 +1,119 @@
-import json
 import requests
 import numpy as np
+import os
 import warnings
-from ncc.utils import MatPlotManager
+from ncc.utils import palette, get_imageset
+from ncc.utils import MatPlotManager, generate_sample_result
 from ncc.metrics import iou_validation
 
 import keras
 
 
-def slack_logging(url):
+class GenerateSampleResult(keras.callbacks.Callback):
+    def __init__(
+        self,
+        train_save_dir,
+        val_save_dir,
+        train_files,
+        validation_files,
+        nb_classes,
+        height,
+        width
+    ):
+        self.train_save_dir = train_save_dir
+        self.val_save_dir = val_save_dir
+        self.train_files = train_files
+        self.validation_files = validation_files
+        self.nb_classes = nb_classes
+        self.height = height
+        self.width = width
 
-    slack_logging_callback = keras.callbacks.LambdaCallback(
-        on_epoch_end=lambda epoch, logs: requests.post(
-            url=url,
-            data=json.dumps(
-                dict(
-                    channel='#deep_callbacks',
-                    attachments=[
-                        dict(
-                            fields=[
-                                dict(value='epoch: %d' %
-                                     epoch + json.dumps(dict(logs)))
-                            ]
-                        )
-                    ]
-                )
-            )
+    def on_epoch_end(self, epoch, logs={}):
+        # display sample predict
+        if epoch % 3 != 0:
+            return
+
+        train_set = generate_sample_result(
+            self.model,
+            self.train_files,
+            self.nb_classes,
+            self.height,
+            self.width
         )
-    )
-    return slack_logging_callback
+        validation_set = generate_sample_result(
+            self.model,
+            self.validation_files,
+            self.nb_classes,
+            self.height,
+            self.width
+        )
+
+        train_image = get_imageset(
+            image_in_np=train_set[0],
+            image_out_np=train_set[1],
+            image_gt_np=train_set[2],
+            palette=palette.palettes,
+            index_void=None
+        )
+        validation_image = get_imageset(
+            image_in_np=validation_set[0],
+            image_out_np=validation_set[1],
+            image_gt_np=validation_set[2],
+            palette=palette.palettes,
+            index_void=None
+        )
+        file_name = 'epoch_{}.png'.format(epoch)
+        train_filename = os.path.join(
+            self.train_save_dir, file_name
+        )
+        validation_filename = os.path.join(
+            self.val_save_dir, file_name
+        )
+        train_image.save(train_filename)
+        validation_image.save(validation_filename)
+
+
+class SlackLogger(keras.callbacks.Callback):
+    def __init__(
+        self,
+        logger_file,
+        token,
+        channel,
+        title,
+        filename='Metric Figure'
+    ):
+        """
+        slackに画像ファイルを送信します。
+        """
+        self.logger_file = logger_file
+        self.token = token
+        self.channel = channel
+        self.title = title
+        self.filename = filename
+
+    def on_epoch_end(self, epoch, logs={}):
+        files = {'file': open(self.logger_file, 'rb')}
+        param = dict(
+            token=self.token,
+            channels=self.channel,
+            filename=self.filename,
+            title=self.title
+        )
+        requests.post(
+            url='https://slack.com/api/files.upload',
+            params=param,
+            files=files
+        )
 
 
 class PlotHistory(keras.callbacks.Callback):
     def __init__(self, save_dir):
         self.save_dir = save_dir
+        self.metrics = ['loss', 'acc']
 
     def on_train_begin(self, logs={}):
         self.plot_manager = MatPlotManager(self.save_dir)
-        for metric in self.params['metrics']:
+        for metric in self.metrics:
             self.plot_manager.add_figure(
                 title=metric,
                 xy_labels=("epoch", metric),
@@ -49,7 +125,7 @@ class PlotHistory(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs={}):
         # update learning figure
-        for metric in self.params['metrics']:
+        for metric in self.metrics:
             figure = self.plot_manager.get_figure(metric)
             figure.add(
                 [
@@ -97,6 +173,35 @@ class IouHistory(keras.callbacks.Callback):
             [iou],
             is_update=True
         )
+
+
+class PostHistory(keras.callbacks.Callback):
+    def __init__(self, train_id, root_url, destination_url):
+        self.train_id = train_id
+        self.root_url = root_url
+        self.destination_url = destination_url
+
+    def on_train_begin(self, logs={}):
+        self._client = ncc.utils.PostClient(self.root_url)
+
+    def on_epoch_end(self, epoch, logs={}):
+        history = dict(
+            train_id=int(self.train_id),
+            epoch=epoch,
+            acc=float(logs.get('acc')),
+            val_acc=float(logs.get('val_acc')),
+            loss=float(logs.get('loss')),
+            val_loss=float(logs.get('val_loss'))
+        )
+        response = self._client.post(
+            params=history,
+            route=self.destination_url
+        )
+        if response.get('train_stopped'):
+            self.model.stop_training = True
+
+    def on_train_end(self, logs={}):
+        self._client.close_session()
 
 
 class Callback(object):

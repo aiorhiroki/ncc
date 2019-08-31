@@ -33,7 +33,7 @@ def list_detection_files(data_dir_path, image_dir, xml_dir, classes):
     return annotation_set
 
 
-def read_classification_set(target_path, class_names):
+def classification_set(target_path, class_names):
     IMAGE_EXTENTINS = ['.jpg', '.png', '.JPG']
 
     annotations = list()
@@ -56,7 +56,7 @@ def read_classification_set(target_path, class_names):
     return annotations
 
 
-def read_segmentation_set(target_path, image_dir, mask_dir):
+def segmentation_set(target_path, image_dir, mask_dir):
     IMAGE_EXTENTINS = ['.jpg', '.png', '.JPG']
 
     annotations = list()

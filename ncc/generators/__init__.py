@@ -1,2 +1,2 @@
-from .generate_arrays_from_file import generate_arrays_from_annotation
+from .image_sequence import ImageSequence
 from .generate_with_mask import generate_with_mask

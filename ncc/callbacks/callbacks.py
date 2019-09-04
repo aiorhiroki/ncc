@@ -2,7 +2,7 @@ import requests
 import numpy as np
 import os
 import warnings
-from ncc.utils import palette, get_imageset
+from ncc.utils import palette, get_imageset, PostClient
 from ncc.utils import MatPlotManager, generate_sample_result
 from ncc.metrics import iou_validation
 
@@ -183,7 +183,7 @@ class PostHistory(keras.callbacks.Callback):
         self.destination_url = destination_url
 
     def on_train_begin(self, logs={}):
-        self._client = ncc.utils.PostClient(self.root_url)
+        self._client = PostClient(self.root_url)
 
     def on_epoch_end(self, epoch, logs={}):
         history = dict(
@@ -341,15 +341,17 @@ class MultiGPUCheckpointCallback(Callback):
             if self.save_best_only:
                 current = logs.get(self.monitor)
                 if current is None:
-                    warnings.warn('Can save best model only with %s available, '
-                                  'skipping.' % (self.monitor), RuntimeWarning)
+                    warnings.warn(
+                        'Can save best model only with %s available, '
+                        'skipping.' % (self.monitor), RuntimeWarning)
                 else:
                     if self.monitor_op(current, self.best):
                         if self.verbose > 0:
-                            print('Epoch %05d: %s improved from %0.5f to %0.5f,'
-                                  ' saving model to %s'
-                                  % (epoch + 1, self.monitor, self.best,
-                                     current, filepath))
+                            print(
+                                'Epoch %05d: %s improved from %0.5f to %0.5f,'
+                                ' saving model to %s'
+                                % (epoch + 1, self.monitor, self.best,
+                                   current, filepath))
                         self.best = current
                         if self.save_weights_only:
                             self.base_model.save_weights(

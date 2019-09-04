@@ -171,7 +171,7 @@ class IouHistory(keras.callbacks.Callback):
             self.model
         )
         figure.add(
-            [iou],
+            iou,
             is_update=True
         )
 

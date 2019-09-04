@@ -141,13 +141,13 @@ class IouHistory(keras.callbacks.Callback):
         self,
         save_dir,
         validation_files,
-        nb_classes,
+        class_names,
         height,
         width
     ):
         self.save_dir = save_dir
         self.validation_files = validation_files
-        self.nb_classes = nb_classes
+        self.class_names = class_names
         self.height = height
         self.width = width
 
@@ -162,8 +162,9 @@ class IouHistory(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         figure = self.plot_manager.get_figure("IoU")
 
+        nb_classes = len(self.class_names)
         iou = iou_validation(
-            self.nb_classes,
+            nb_classes,
             self.height,
             self.width,
             self.validation_files,

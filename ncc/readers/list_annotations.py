@@ -75,7 +75,7 @@ def segmentation_set(target_path, image_dir, mask_dir):
                 os.path.join(mask_dir_path, '*' + image_ex)
             )
         for mask_path in mask_paths:
-            file_name = os.path.splitext(os.path.basename(mask_path))
+            file_name, _ = os.path.splitext(os.path.basename(mask_path))
             for image_ex in IMAGE_EXTENTINS:
                 image_path = os.path.join(
                     image_dir_path, file_name + image_ex

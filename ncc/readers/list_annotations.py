@@ -46,7 +46,7 @@ def classification_set(target_path, class_names):
         for class_dir_path in class_dir_paths:
             for image_ex in IMAGE_EXTENTINS:
                 image_paths += glob(
-                    os.path.join(class_dir_path, '*', image_ex)
+                    os.path.join(class_dir_path, '*' + image_ex)
                 )
         class_annotation = [
             [image_path, class_id] for image_path in image_paths
@@ -72,13 +72,13 @@ def segmentation_set(target_path, image_dir, mask_dir):
         mask_paths = list()
         for image_ex in IMAGE_EXTENTINS:
             mask_paths += glob(
-                os.path.join(mask_dir_path, '*', image_ex)
+                os.path.join(mask_dir_path, '*' + image_ex)
             )
         for mask_path in mask_paths:
             file_name = os.path.splitext(os.path.basename(mask_path))
             for image_ex in IMAGE_EXTENTINS:
                 image_path = os.path.join(
-                    image_dir_path, file_name, image_ex
+                    image_dir_path, file_name + image_ex
                 )
                 if os.path.exists(image_path):
                     annotations.append([image_path, mask_path])

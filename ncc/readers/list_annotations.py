@@ -14,7 +14,7 @@ def list_detection_files(data_dir_path, image_dir, xml_dir, classes):
     :param image_dir
     :param xml_dir
     """
-    IMAGE_EXTENTINS = ['.jpg', '.png', '.JPG']
+    IMAGE_EXTENTINS = ['.jpg', '.png']
     image_dir_path = os.path.join(data_dir_path, image_dir)
     xml_dir_path = os.path.join(data_dir_path, xml_dir)
     xml_files = glob(os.path.join(xml_dir_path, '*.xml'))
@@ -34,7 +34,7 @@ def list_detection_files(data_dir_path, image_dir, xml_dir, classes):
 
 
 def classification_set(target_path, class_names):
-    IMAGE_EXTENTINS = ['.jpg', '.png', '.JPG']
+    IMAGE_EXTENTINS = ['.jpg', '.png']
 
     annotations = list()
     for class_id, class_name in enumerate(class_names):
@@ -57,7 +57,7 @@ def classification_set(target_path, class_names):
 
 
 def segmentation_set(target_path, image_dir, mask_dir):
-    IMAGE_EXTENTINS = ['.jpg', '.png', '.JPG']
+    IMAGE_EXTENTINS = ['.jpg', '.png']
 
     annotations = list()
     image_dir_paths = [
@@ -77,10 +77,10 @@ def segmentation_set(target_path, image_dir, mask_dir):
         for mask_path in mask_paths:
             file_name, _ = os.path.splitext(os.path.basename(mask_path))
             for image_ex in IMAGE_EXTENTINS:
-                image_path = glob(
-                    os.path.join(image_dir_path, file_name + image_ex)
+                image_path = os.path.join(
+                    image_dir_path, file_name + image_ex
                 )
-                if image_path:
+                if os.path.exists(image_path):
                     annotations.append([image_path, mask_path])
 
     return annotations

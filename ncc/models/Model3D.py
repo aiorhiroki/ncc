@@ -1,4 +1,6 @@
-from keras.layers import Dense, Dropout, Flatten, Conv3D, MaxPooling3D, BatchNormalization, Input
+import tensorflow as tf
+from keras.layers import Dense, Dropout, Flatten, Conv3D, MaxPooling3D
+from keras.layers import BatchNormalization, Input
 from keras.models import Model
 
 import numpy as np
@@ -53,8 +55,10 @@ def Model3D(input_shape, num_classes, include_top=True):
     ]
 
     latent_dim = np.prod(input_shape[:3])  # depth * width * height
-    latent_dim *= 8 * 2 ** (nb_convolution - 1)  # filter size at last convolution
-    latent_dim //= 8 ** nb_convolution  # number of training parameters reduced with convolution
+    # filter size at last convolution
+    latent_dim *= 8 * 2 ** (nb_convolution - 1)
+    # number of training parameters reduced with convolution
+    latent_dim //= 8 ** nb_convolution
     latent_dim //= 4  # dimension reduction from flatten to dense
 
     if include_top:
@@ -67,8 +71,9 @@ def Model3D(input_shape, num_classes, include_top=True):
             Dense(num_classes, activation='softmax', name='prediction')
         ]
 
-    x_in = Input(shape=input_shape, name='input')
-    prediction = inst_layers(layers, x_in)
-    model = Model(x_in, prediction)
+    with tf.device("/cpu:0"):
+        x_in = Input(shape=input_shape, name='input')
+        prediction = inst_layers(layers, x_in)
+        model = Model(x_in, prediction)
 
     return model

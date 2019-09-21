@@ -1,4 +1,6 @@
-from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Input
+import tensorflow as tf
+from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
+from keras.layers import BatchNormalization, Input
 from keras.models import Model
 
 import numpy as np
@@ -52,10 +54,10 @@ def Model2D(input_shape, num_classes, include_top=True):
         for layer_id in range(1, nb_convolution)
     ]
 
-    latent_dim = np.prod(input_shape[:2])  # width * height
-    latent_dim *= 8 * 2 ** (nb_convolution - 1)  # filter size at last convolution
-    latent_dim //= 4 ** nb_convolution  # number of training parameters reduced with convolution
-    latent_dim //= 4  # dimension reduction from flatten to dense
+    latent_dim = np.prod(input_shape[:2])
+    latent_dim *= 8 * 2 ** (nb_convolution - 1)
+    latent_dim //= 4 ** nb_convolution
+    latent_dim //= 4
 
     if include_top:
 
@@ -67,8 +69,9 @@ def Model2D(input_shape, num_classes, include_top=True):
             Dense(num_classes, activation='softmax', name='prediction')
         ]
 
-    x_in = Input(shape=input_shape, name='input')
-    prediction = inst_layers(layers, x_in)
-    model = Model(x_in, prediction)
+    with tf.device("/cpu:0"):
+        x_in = Input(shape=input_shape, name='input')
+        prediction = inst_layers(layers, x_in)
+        model = Model(x_in, prediction)
 
     return model

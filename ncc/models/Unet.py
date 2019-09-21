@@ -1,4 +1,5 @@
 # coding: utf-8
+import tensorflow as tf
 from keras.models import Model
 from keras.layers import Input
 from keras.layers.convolutional import Conv2D, ZeroPadding2D, Conv2DTranspose
@@ -19,8 +20,10 @@ def create_encoding_layer(sequence, filter_count):
 
 def create_decoding_layer(sequence, filter_count, add_drop_layer=True):
     new_sequence = Activation(activation='relu')(sequence)
-    new_sequence = Conv2DTranspose(filter_count, 2, strides=2,
-                                   kernel_initializer='he_uniform')(new_sequence)
+    new_sequence = Conv2DTranspose(
+        filter_count, 2, strides=2,
+        kernel_initializer='he_uniform'
+    )(new_sequence)
     new_sequence = BatchNormalization()(new_sequence)
     if add_drop_layer:
         new_sequence = Dropout(0.5)(new_sequence)
@@ -48,53 +51,55 @@ def Unet(input_shape, output_channel_count):
         input_shape = (input_height, input_width, input_shape[2])
         print('input_shape has changed to {}'.format(input_shape))
 
-    x_in = Input(shape=input_shape, name='input')
+    with tf.device("/cpu:0"):
+        x_in = Input(shape=input_shape, name='input')
 
-    #################
-    # encoder layer #
-    #################
-    first_layers = [
-        ZeroPadding2D((1, 1)),
-        Conv2D(filters=8,
-               kernel_size=4,
-               strides=2,
-               input_shape=input_shape)
-    ]
+        #################
+        # encoder layer #
+        #################
+        first_layers = [
+            ZeroPadding2D((1, 1)),
+            Conv2D(filters=8,
+                   kernel_size=4,
+                   strides=2,
+                   input_shape=input_shape)
+        ]
 
-    first_tensor = inst_layers(first_layers, x_in)
-    encoder = first_tensor
-    encoders = [encoder]
-    for layer_id in range(1, num_layers):
-        encoder = create_encoding_layer(
-            sequence=encoder,
-            filter_count=8 * 2**layer_id if layer_id <= 3 else 8 * 2**3
-        )
-        encoders.append(encoder)
+        first_tensor = inst_layers(first_layers, x_in)
+        encoder = first_tensor
+        encoders = [encoder]
+        for layer_id in range(1, num_layers):
+            encoder = create_encoding_layer(
+                sequence=encoder,
+                filter_count=8 * 2**layer_id if layer_id <= 3 else 8 * 2**3
+            )
+            encoders.append(encoder)
 
-    #################
-    # decoder layer #
-    #################
-    decoder = encoder
-    for layer_id in range(1, num_layers):
-        decoder = create_decoding_layer(
-            sequence=decoder,
-            filter_count=8 * 2**(num_layers-layer_id -
-                                 1) if (num_layers-layer_id) <= 3 else 8 * 2**3,
-            add_drop_layer=True if layer_id <= 3 else False
-        )
-        decoder = concatenate(
-            [decoder, encoders[num_layers-layer_id-1]], axis=-1)
+        #################
+        # decoder layer #
+        #################
+        decoder = encoder
+        for layer_id in range(1, num_layers):
+            decoder = create_decoding_layer(
+                sequence=decoder,
+                filter_count=8 * 2**(
+                    num_layers-layer_id - 1
+                ) if (
+                    num_layers-layer_id
+                ) <= 3 else 8 * 2**3,
+                add_drop_layer=True if layer_id <= 3 else False
+            )
+            decoder = concatenate(
+                [decoder, encoders[num_layers-layer_id-1]], axis=-1)
 
-    final_layers = [
-        Activation(activation='relu'),
-        Conv2DTranspose(output_channel_count, (2, 2), strides=2),
-        Activation(activation='softmax')
-    ]
+        final_layers = [
+            Activation(activation='relu'),
+            Conv2DTranspose(output_channel_count, (2, 2), strides=2),
+            Activation(activation='softmax')
+        ]
 
-    segmentation = inst_layers(final_layers, decoder)
-
-    model = Model(x_in, segmentation)
-    model.compile(optimizer='sgd', metrics=[dice_coef], loss=dice_coef_loss)
+        segmentation = inst_layers(final_layers, decoder)
+        model = Model(x_in, segmentation)
 
     return model, input_shape
 

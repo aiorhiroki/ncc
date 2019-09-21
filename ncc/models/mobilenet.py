@@ -6,11 +6,11 @@ from tensorflow.keras.models import Model
 import pretrainedmodels
 
 
-def mobilenet(nb_classes, width=244, height=244, framework="tensorflow"):
+def mobilenet(nb_classes, height=244, width=244, framework="tensorflow"):
     if framework == "tensorflow":
         with tf.device("/cpu:0"):
             base_model = MobileNet(
-                input_shape=(width, height, 3),
+                input_shape=(height, width, 3),
                 weights='imagenet',
                 include_top=False
             )

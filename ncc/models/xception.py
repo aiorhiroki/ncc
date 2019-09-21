@@ -6,11 +6,11 @@ from keras.models import Model
 import pretrainedmodels
 
 
-def xception(nb_classes, width=299, height=299, framework="tensorflow"):
+def xception(nb_classes, height=299, width=299, framework="tensorflow"):
     if framework == "tensorflow":
         with tf.device("/cpu:0"):
             base_model = Xception(
-                input_shape=(width, height, 3),
+                input_shape=(height, width, 3),
                 weights='imagenet',
                 include_top=False
             )

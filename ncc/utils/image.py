@@ -188,10 +188,10 @@ class ImageUtil:
         labels = np.asarray(labels, dtype=np.uint8)
         # Classification
         if len(labels.shape) == 1:
-            one_hot = np.eye(self.nb_classes, dtype=np.uint8)
+            one_hot = np.eye(self.nb_classes)
         # Segmentation
         else:
-            one_hot = np.identity(self.nb_classes, dtype=np.uint8)
+            one_hot = np.identity(self.nb_classes)
         return one_hot[labels]
 
     def _cast_to_frame(

@@ -60,15 +60,11 @@ def segmentation_set(target_path, image_dir, mask_dir):
     IMAGE_EXTENTINS = ['.jpg', '.png']
 
     annotations = list()
-    image_dir_paths = [
-        os.path.join(target_path, image_dir),
-        os.path.join(target_path, '*', image_dir)
-    ]
     mask_dir_paths = [
         os.path.join(target_path, mask_dir),
         os.path.join(target_path, '*', mask_dir)
     ]
-    for image_dir_path, mask_dir_path in zip(image_dir_paths, mask_dir_paths):
+    for mask_dir_path in mask_dir_paths:
         mask_paths = list()
         for image_ex in IMAGE_EXTENTINS:
             mask_paths += glob(
@@ -76,6 +72,9 @@ def segmentation_set(target_path, image_dir, mask_dir):
             )
         for mask_path in mask_paths:
             file_name, _ = os.path.splitext(os.path.basename(mask_path))
+            mask_dir_path, _ = os.path.split(mask_path)
+            parent_mask_dir_path, _ = os.path.split(mask_dir_path)
+            image_dir_path = os.path.join(parent_mask_dir_path, image_dir)
             for image_ex in IMAGE_EXTENTINS:
                 image_path = os.path.join(
                     image_dir_path, file_name + image_ex

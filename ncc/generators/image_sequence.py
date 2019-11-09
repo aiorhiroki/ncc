@@ -1,6 +1,6 @@
 import math
 
-from keras.utils import Sequence
+from tensorflow.python.keras.utils.data_utils import Sequence
 import numpy as np
 from ncc.tasks import Task
 from ncc.utils import ImageUtil

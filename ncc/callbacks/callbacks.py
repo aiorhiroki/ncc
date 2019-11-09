@@ -6,7 +6,7 @@ from ncc.utils import palette, get_imageset, PostClient
 from ncc.utils import MatPlotManager, generate_sample_result
 from ncc.metrics import iou_validation
 
-import keras
+from tensorflow.python import keras
 
 
 class GenerateSampleResult(keras.callbacks.Callback):

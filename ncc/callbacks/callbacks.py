@@ -107,9 +107,9 @@ class SlackLogger(keras.callbacks.Callback):
 
 
 class PlotHistory(keras.callbacks.Callback):
-    def __init__(self, save_dir):
+    def __init__(self, save_dir, metrics):
         self.save_dir = save_dir
-        self.metrics = ['loss', 'acc']
+        self.metrics = metrics
 
     def on_train_begin(self, logs={}):
         self.plot_manager = MatPlotManager(self.save_dir)

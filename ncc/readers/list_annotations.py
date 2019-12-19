@@ -33,20 +33,21 @@ def list_detection_files(data_dir_path, image_dir, xml_dir, classes):
     return annotation_set
 
 
-def classification_set(target_path, class_names):
+def classification_set(target_dir, data_list, class_names):
     IMAGE_EXTENTINS = ['.jpg', '.png']
 
     annotations = list()
     for class_id, class_name in enumerate(class_names):
         image_paths = list()
-        class_dir_paths = [
-            os.path.join(target_path,  class_name),
-            os.path.join(target_path, '*',  class_name)
-        ]
-        for class_dir_path in class_dir_paths:
-            for image_ex in IMAGE_EXTENTINS:
+        for image_ex in IMAGE_EXTENTINS:
+            for case_data in data_list:
                 image_paths += glob(
-                    os.path.join(class_dir_path, '*' + image_ex)
+                    os.path.join(
+                        target_dir,
+                        case_data,
+                        class_name,
+                        '*' + image_ex
+                    )
                 )
         class_annotation = [
             [image_path, class_id] for image_path in image_paths
@@ -56,31 +57,32 @@ def classification_set(target_path, class_names):
     return annotations
 
 
-def segmentation_set(target_path, image_dir, mask_dir):
+def segmentation_set(target_dir, data_list, image_dir, mask_dir):
     IMAGE_EXTENTINS = ['.jpg', '.png']
-
     annotations = list()
-    mask_dir_paths = [
-        os.path.join(target_path, mask_dir),
-        os.path.join(target_path, '*', mask_dir)
-    ]
-    for mask_dir_path in mask_dir_paths:
-        mask_paths = list()
-        for image_ex in IMAGE_EXTENTINS:
+    mask_paths = list()
+
+    for image_ex in IMAGE_EXTENTINS:
+        for data_case in data_list:
             mask_paths += glob(
-                os.path.join(mask_dir_path, '*' + image_ex)
-            )
-        for mask_path in mask_paths:
-            file_name, _ = os.path.splitext(os.path.basename(mask_path))
-            mask_dir_path, _ = os.path.split(mask_path)
-            parent_mask_dir_path, _ = os.path.split(mask_dir_path)
-            image_dir_path = os.path.join(parent_mask_dir_path, image_dir)
-            for image_ex in IMAGE_EXTENTINS:
-                image_path = os.path.join(
-                    image_dir_path, file_name + image_ex
+                os.path.join(
+                    target_dir,
+                    data_case,
+                    mask_dir,
+                    '*' + image_ex
                 )
-                if os.path.exists(image_path):
-                    annotations.append([image_path, mask_path])
+            )
+    for mask_path in mask_paths:
+        file_name, _ = os.path.splitext(os.path.basename(mask_path))
+        mask_dir_path, _ = os.path.split(mask_path)
+        parent_mask_dir_path, _ = os.path.split(mask_dir_path)
+        image_dir_path = os.path.join(parent_mask_dir_path, image_dir)
+        for image_ex in IMAGE_EXTENTINS:
+            image_path = os.path.join(
+                image_dir_path, file_name + image_ex
+            )
+            if os.path.exists(image_path):
+                annotations.append([image_path, mask_path])
 
     return annotations
 

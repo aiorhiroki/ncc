@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
     name='ncc',
-    version='0.1.0',
+    version='1.0.0',
     description='NCC AI Tools',
     author='Hiroki Matsuzaki',
     author_email='1234defgsigeru@gmail.com',

@@ -39,7 +39,7 @@ def iou_dice_val(nb_classes, height, width, data_set, model):
     iou[np.isnan(iou)] = 0
     dice[np.isnan(dice)] = 0
 
-    return iou, dice
+    return {'iou': iou, 'dice': dice}
 
 
 def detection_rate_confusions(pred_labels, gt_labels, nb_classes):

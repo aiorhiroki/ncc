@@ -4,7 +4,7 @@ import os
 import warnings
 from ncc.utils import palette, get_imageset, PostClient
 from ncc.utils import MatPlotManager, generate_sample_result
-from ncc.metrics import iou_validation
+from ncc.metrics import iou_dice_val
 
 from tensorflow.python import keras
 
@@ -158,20 +158,30 @@ class IouHistory(keras.callbacks.Callback):
             xy_labels=("epoch", "iou"),
             labels=self.class_names,
         )
+        self.plot_manager.add_figure(
+            title="Dice",
+            xy_labels=("epoch", "dice"),
+            labels=self.class_names,
+        )
 
     def on_epoch_end(self, epoch, logs={}):
-        figure = self.plot_manager.get_figure("IoU")
+        iou_figure = self.plot_manager.get_figure("IoU")
+        dice_figure = self.plot_manager.get_figure("Dice")
 
         nb_classes = len(self.class_names)
-        iou = iou_validation(
+        iou_dice = iou_dice_val(
             nb_classes,
             self.height,
             self.width,
             self.validation_files,
             self.model
         )
-        figure.add(
-            iou,
+        iou_figure.add(
+            iou_dice['iou'],
+            is_update=True
+        )
+        dice_figure.add(
+            iou_dice['dice'],
             is_update=True
         )
 
